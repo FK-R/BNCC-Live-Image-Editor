@@ -170,25 +170,17 @@
 
   <script>
     // ==========================================
-    // DEVELOPER CONFIGURATION & BOUNDARIES
+    // DEVELOPER POSITION CONFIGURATION
+    // Change X, Y coordinates and line heights here!
     // ==========================================
     const CONFIG = {
       NAME_X: 110,
       NAME_Y: 562.5,
-      NAME_LINE_HEIGHT: 65, 
+      NAME_LINE_HEIGHT: 65, // Distance between lines if name breaks
       BATCH_X: 110,
       BATCH_Y: 804,
       COLLEGE_X: 110,
       COLLEGE_Y: 846
-    };
-
-    // Developer boundary limits for photo dragging 
-    // (Prevents the photo from crossing past the right and bottom lines of the red square box)
-    const BOUNDS = {
-      MIN_X: 150,  // How far left the user can drag
-      MAX_X: 430,  // Threshold for right boundary limit (Dev can adjust)
-      MIN_Y: 100,  // How far up the user can drag
-      MAX_Y: 245   // Threshold for bottom boundary limit (Dev can adjust)
     };
 
     const canvas = document.getElementById('posterCanvas');
@@ -209,7 +201,7 @@
     let photoY = 410;       
     let baseWidth = 440;    
     let baseHeight = 480;   
-    let scale = 1.58;        
+    let scale = 1.0;        
 
     // Drag-and-drop tracking states
     let isDragging = false;
@@ -218,7 +210,7 @@
 
     // Fixed Template Background Image
     const bgTemplateImage = new Image();
-    bgTemplateImage.src = 'temp.svg'; 
+    bgTemplateImage.src = 'temp.svg'; // Make sure this matches your template filename
 
     bgTemplateImage.onload = () => renderCanvas();
 
@@ -249,21 +241,14 @@
       // 1. Draw Fixed Template Background
       ctx.drawImage(bgTemplateImage, 0, 0, canvas.width, canvas.height);
 
-      // 2. Draw User Photo (Draggable & Scalable with Boundary Enforced)
+      // 2. Draw User Photo (Draggable & Scalable)
       if (userImage) {
         const currentWidth = baseWidth * scale;
         const currentHeight = baseHeight * scale;
-
-        // Enforce boundary constraints during render/drag
-        if (photoX > BOUNDS.MAX_X) photoX = BOUNDS.MAX_X;
-        if (photoY > BOUNDS.MAX_Y) photoY = BOUNDS.MAX_Y;
-        if (photoX < BOUNDS.MIN_X) photoX = BOUNDS.MIN_X;
-        if (photoY < BOUNDS.MIN_Y) photoY = BOUNDS.MIN_Y;
-
         ctx.drawImage(userImage, photoX, photoY, currentWidth, currentHeight);
       }
 
-      // 3. Draw Dynamic Name 
+      // 3. Draw Dynamic Name (Fixed by Dev in CONFIG, breaks lines if > 10-11 letters)
       ctx.fillStyle = "#FFFFFF";
       ctx.font = "800 68px 'Inter', sans-serif";
       ctx.textAlign = "left";
@@ -276,18 +261,18 @@
         ctx.fillText(line, CONFIG.NAME_X, CONFIG.NAME_Y + (index * CONFIG.NAME_LINE_HEIGHT));
       });
 
-      // 4. Draw Dynamic Batch 
+      // 4. Draw Dynamic Batch (Fixed by Dev in CONFIG)
       ctx.font = "400 32px 'Inter', sans-serif";
       const batchText = batchInput.value || "Batch Year";
       ctx.fillText(batchText, CONFIG.BATCH_X, CONFIG.BATCH_Y);
 
-      // 5. Draw Dynamic College Name 
+      // 5. Draw Dynamic College Name (Fixed by Dev in CONFIG)
       ctx.font = "500 30px 'Inter', sans-serif";
       const collegeText = collegeInput.value || "College Name";
       ctx.fillText(collegeText, CONFIG.COLLEGE_X, CONFIG.COLLEGE_Y);
     }
 
-    // --- Drag and Drop Mouse / Touch Listeners with Boundary Checks ---
+    // --- Drag and Drop Mouse / Touch Listeners for Photo Only ---
     function getCanvasCoordinates(e) {
       const rect = canvas.getBoundingClientRect();
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -313,20 +298,8 @@
       if (!isDragging || !userImage) return;
       e.preventDefault();
       const coords = getCanvasCoordinates(e);
-      
-      // Calculate new position
-      let newX = coords.x - dragStartX;
-      let newY = coords.y - dragStartY;
-
-      // Apply Developer Defined Boundary Restrictions (Right and Bottom limits)
-      if (newX > BOUNDS.MAX_X) newX = BOUNDS.MAX_X;
-      if (newX < BOUNDS.MIN_X) newX = BOUNDS.MIN_X;
-      if (newY > BOUNDS.MAX_Y) newY = BOUNDS.MAX_Y;
-      if (newY < BOUNDS.MIN_Y) newY = BOUNDS.MIN_Y;
-
-      photoX = newX;
-      photoY = newY;
-
+      photoX = coords.x - dragStartX;
+      photoY = coords.y - dragStartY;
       renderCanvas();
     }
 
