@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>BNCC Ex Cadet Fest 2026 - Poster Generator</title>
+  <!-- Import Inter Font from Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0d1117;
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px;
+      margin: 0;
+    }
+    .container {
+      display: flex;
+      flex-direction: row;
+      gap: 30px;
+      max-width: 1200px;
+      width: 100%;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .form-panel {
+      flex: 1;
+      min-width: 320px;
+      background: #161b22;
+      padding: 24px;
+      border-radius: 12px;
+      border: 1px solid #30363d;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #c9d1d9;
+    }
+    input[type="text"], input[type="file"], input[type="range"] {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 6px;
+      border: 1px solid #30363d;
+      background: #0d1117;
+      color: #ffffff;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      box-sizing: border-box;
+    }
+    input[type="range"] {
+      padding: 4px;
+      cursor: pointer;
+    }
+    input:focus {
+      outline: none;
+      border-color: #238636;
+    }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background-color: #238636;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background 0.2s;
+    }
+    .btn:hover {
+      background-color: #2ea043;
+    }
+    .btn-secondary {
+      background-color: #21262d;
+      border: 1px solid #30363d;
+      padding: 8px 12px;
+      font-size: 14px;
+      border-radius: 6px;
+      color: #c9d1d9;
+      cursor: pointer;
+      margin-top: 6px;
+    }
+    .btn-secondary:hover {
+      background-color: #30363d;
+    }
+    .preview-panel {
+      flex: 1;
+      min-width: 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    canvas {
+      width: 100%;
+      max-width: 450px;
+      height: auto;
+      border-radius: 12px;
+      border: 1px solid #30363d;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      cursor: grab;
+    }
+    canvas:active {
+      cursor: grabbing;
+    }
+    .instruction-note {
+      font-size: 12px;
+      color: #8b949e;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>BNCC Ex Cadet Fest 2026 - Poster Generator</h2>
+
+  <div class="container">
+    <!-- User Input Panel -->
+    <div class="form-panel">
+      
+      <div class="form-group">
+        <label for="userPhoto">1. Upload User Photo:</label>
+        <input type="file" id="userPhoto" accept="image/*">
+        <div class="instruction-note">💡 Click and drag directly on the canvas to position your photo.</div>
+      </div>
+
+      <div class="form-group">
+        <label for="photoZoom">2. Photo Zoom Level:</label>
+        <input type="range" id="photoZoom" min="0.2" max="3" step="0.05" value="1">
+      </div>
+
+      <button type="button" class="btn-secondary" id="resetPhotoBtn">Reset Photo Position & Scale</button>
+
+      <hr style="border-color: #30363d; margin: 20px 0;">
+
+      <div class="form-group">
+        <label for="userName">3. Name (Dynamic):</label>
+        <input type="text" id="userName" value="MD. FAKWER UDDIN" placeholder="e.g. MD. FAKWER UDDIN">
+      </div>
+
+      <div class="form-group">
+        <label for="userBatch">4. Batch (Dynamic):</label>
+        <input type="text" id="userBatch" value="2016 Batch" placeholder="e.g. 2016 Batch">
+      </div>
+
+      <div class="form-group">
+        <label for="userCollege">5. College Name (Dynamic):</label>
+        <input type="text" id="userCollege" value="Omar Gani M.E.S College" placeholder="e.g. Omar Gani M.E.S College">
+      </div>
+
+      <button class="btn" id="downloadBtn">Download Poster PNG</button>
+    </div>
+
+    <!-- Live Preview Canvas -->
+    <div class="preview-panel">
+      <canvas id="posterCanvas" width="1080" height="1350"></canvas>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // DEVELOPER POSITION CONFIGURATION
+    // Change X, Y coordinates and line heights here!
+    // ==========================================
+    const CONFIG = {
+      NAME_X: 110,
+      NAME_Y: 562.5,
+      NAME_LINE_HEIGHT: 65, // Distance between lines if name breaks
+      BATCH_X: 110,
+      BATCH_Y: 804,
+      COLLEGE_X: 110,
+      COLLEGE_Y: 846
+    };
+
+    const canvas = document.getElementById('posterCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Inputs
+    const photoInput = document.getElementById('userPhoto');
+    const zoomInput = document.getElementById('photoZoom');
+    const resetBtn = document.getElementById('resetPhotoBtn');
+    const nameInput = document.getElementById('userName');
+    const batchInput = document.getElementById('userBatch');
+    const collegeInput = document.getElementById('userCollege');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    // Photo State Variables
+    let userImage = null;
+    let photoX = 580;       
+    let photoY = 410;       
+    let baseWidth = 440;    
+    let baseHeight = 480;   
+    let scale = 1.0;        
+
+    // Drag-and-drop tracking states
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+
+    // Fixed Template Background Image
+    const bgTemplateImage = new Image();
+    bgTemplateImage.src = 'temp.svg'; // Make sure this matches your template filename
+
+    bgTemplateImage.onload = () => renderCanvas();
+
+    // Helper function to smart-wrap name if length/words exceed limit (~11 chars)
+    function getWrappedLines(text, maxLen = 11) {
+      const words = text.trim().split(/\s+/);
+      const lines = [];
+      let currentLine = '';
+      
+      for (let word of words) {
+        if ((currentLine + ' ' + word).trim().length <= maxLen || currentLine === '') {
+          currentLine = currentLine ? currentLine + ' ' + word : word;
+        } else {
+          lines.push(currentLine);
+          currentLine = word;
+        }
+      }
+      if (currentLine) {
+        lines.push(currentLine);
+      }
+      return lines;
+    }
+
+    function renderCanvas() {
+      // Clear Canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 1. Draw Fixed Template Background
+      ctx.drawImage(bgTemplateImage, 0, 0, canvas.width, canvas.height);
+
+      // 2. Draw User Photo (Draggable & Scalable)
+      if (userImage) {
+        const currentWidth = baseWidth * scale;
+        const currentHeight = baseHeight * scale;
+        ctx.drawImage(userImage, photoX, photoY, currentWidth, currentHeight);
+      }
+
+      // 3. Draw Dynamic Name (Fixed by Dev in CONFIG, breaks lines if > 10-11 letters)
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "800 68px 'Inter', sans-serif";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "top";
+      
+      const nameText = nameInput.value || "YOUR NAME";
+      const nameLines = getWrappedLines(nameText, 11);
+      
+      nameLines.forEach((line, index) => {
+        ctx.fillText(line, CONFIG.NAME_X, CONFIG.NAME_Y + (index * CONFIG.NAME_LINE_HEIGHT));
+      });
+
+      // 4. Draw Dynamic Batch (Fixed by Dev in CONFIG)
+      ctx.font = "400 32px 'Inter', sans-serif";
+      const batchText = batchInput.value || "Batch Year";
+      ctx.fillText(batchText, CONFIG.BATCH_X, CONFIG.BATCH_Y);
+
+      // 5. Draw Dynamic College Name (Fixed by Dev in CONFIG)
+      ctx.font = "500 30px 'Inter', sans-serif";
+      const collegeText = collegeInput.value || "College Name";
+      ctx.fillText(collegeText, CONFIG.COLLEGE_X, CONFIG.COLLEGE_Y);
+    }
+
+    // --- Drag and Drop Mouse / Touch Listeners for Photo Only ---
+    function getCanvasCoordinates(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+
+      return {
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
+      };
+    }
+
+    function startDrag(e) {
+      if (!userImage) return;
+      isDragging = true;
+      const coords = getCanvasCoordinates(e);
+      dragStartX = coords.x - photoX;
+      dragStartY = coords.y - photoY;
+    }
+
+    function doDrag(e) {
+      if (!isDragging || !userImage) return;
+      e.preventDefault();
+      const coords = getCanvasCoordinates(e);
+      photoX = coords.x - dragStartX;
+      photoY = coords.y - dragStartY;
+      renderCanvas();
+    }
+
+    function endDrag() {
+      isDragging = false;
+    }
+
+    canvas.addEventListener('mousedown', startDrag);
+    window.addEventListener('mousemove', doDrag);
+    window.addEventListener('mouseup', endDrag);
+    canvas.addEventListener('touchstart', startDrag);
+    window.addEventListener('touchmove', doDrag, { passive: false });
+    window.addEventListener('touchend', endDrag);
+
+    // Zoom slider handler
+    zoomInput.addEventListener('input', (e) => {
+      scale = parseFloat(e.target.value);
+      renderCanvas();
+    });
+
+    // Reset position button handler
+    resetBtn.addEventListener('click', () => {
+      photoX = 580;
+      photoY = 410;
+      scale = 1.0;
+      zoomInput.value = 1;
+      renderCanvas();
+    });
+
+    // Photo Upload Handler
+    photoInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            userImage = img;
+            const aspect = img.width / img.height;
+            baseWidth = 440;
+            baseHeight = 440 / aspect;
+            renderCanvas();
+          };
+          img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Re-render live as inputs change
+    nameInput.addEventListener('input', renderCanvas);
+    batchInput.addEventListener('input', renderCanvas);
+    collegeInput.addEventListener('input', renderCanvas);
+
+    // Initial render call
+    renderCanvas();
+
+    // Instant PNG Download at full 1080x1350 resolution
+    downloadBtn.addEventListener('click', () => {
+      const dataUrl = canvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = `${nameInput.value || 'Fest-Registration'}.png`;
+      a.click();
+    });
+  </script>
+</body>
+</html>
